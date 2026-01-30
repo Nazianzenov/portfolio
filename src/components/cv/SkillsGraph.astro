@@ -1,0 +1,739 @@
+---
+/**
+ * SkillsGraph - Interactive tree visualization with heatmap view
+ *
+ * Data structure:
+ * - name: string (display label)
+ * - children?: array of child nodes
+ * - level?: 1-5 expertise level (for leaf nodes, used in heatmap)
+ */
+
+export interface SkillNode {
+  name: string;
+  children?: SkillNode[];
+  level?: number; // 1-5 expertise level
+}
+
+interface Props {
+  skills: SkillNode;
+}
+
+const { skills } = Astro.props;
+---
+
+<div class="skills-tree-wrapper">
+  <div class="skills-tree-controls">
+    <button id="expand-all-btn" class="tree-btn" title="Expand all">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 3 21 3 21 9"></polyline>
+        <polyline points="9 21 3 21 3 15"></polyline>
+        <line x1="21" y1="3" x2="14" y2="10"></line>
+        <line x1="3" y1="21" x2="10" y2="14"></line>
+      </svg>
+    </button>
+    <button id="collapse-all-btn" class="tree-btn" title="Collapse all">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="4 14 10 14 10 20"></polyline>
+        <polyline points="20 10 14 10 14 4"></polyline>
+        <line x1="14" y1="10" x2="21" y2="3"></line>
+        <line x1="3" y1="21" x2="10" y2="14"></line>
+      </svg>
+    </button>
+    <button id="heatmap-btn" class="tree-btn" title="Heatmap view">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7"></rect>
+        <rect x="14" y="3" width="7" height="7"></rect>
+        <rect x="14" y="14" width="7" height="7"></rect>
+        <rect x="3" y="14" width="7" height="7"></rect>
+      </svg>
+    </button>
+    <div class="search-container">
+      <input
+        type="text"
+        id="skills-search"
+        class="tree-search"
+        placeholder="Search skills..."
+      />
+      <button id="clear-search-btn" class="clear-btn" title="Clear search">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="skills-tree" class="skills-tree"></div>
+  <div id="skills-heatmap" class="skills-heatmap" style="display: none;"></div>
+</div>
+
+<script is:inline define:vars={{ skills }}>
+  function initTree() {
+    const treeContainer = document.getElementById("skills-tree");
+    const heatmapContainer = document.getElementById("skills-heatmap");
+    const heatmapBtn = document.getElementById("heatmap-btn");
+    if (!treeContainer || !heatmapContainer) return;
+
+    let isHeatmapView = false;
+
+    // Track state
+    const expandedNodes = new Set();
+    const matchingNodes = new Set();
+
+    // Build parent map for search path tracing
+    const parentMap = new Map();
+    function buildParentMap(node, parent = null, path = "") {
+      const nodePath = path ? `${path}/${node.name}` : node.name;
+      if (parent) parentMap.set(nodePath, path);
+      if (node.children) {
+        node.children.forEach(child => buildParentMap(child, node, nodePath));
+      }
+    }
+    buildParentMap(skills);
+
+    // Initially expand root AND all main categories
+    if (skills.children) {
+      expandedNodes.add(skills.name);
+      skills.children.forEach(category => {
+        expandedNodes.add(`${skills.name}/${category.name}`);
+      });
+    }
+
+    // Collect all leaf nodes with their levels
+    function collectLeaves(node, category = "") {
+      const leaves = [];
+      if (!node.children || node.children.length === 0) {
+        leaves.push({ name: node.name, level: node.level || 3, category });
+      } else {
+        const cat = category || node.name;
+        node.children.forEach(child => {
+          leaves.push(...collectLeaves(child, cat));
+        });
+      }
+      return leaves;
+    }
+
+    // Render the tree
+    function renderTree() {
+      treeContainer.innerHTML = "";
+      const tree = createTreeElement(skills, "", 0);
+      treeContainer.appendChild(tree);
+    }
+
+    function createTreeElement(node, parentPath, depth) {
+      const nodePath = parentPath ? `${parentPath}/${node.name}` : node.name;
+      const hasChildren = node.children && node.children.length > 0;
+      const isExpanded = expandedNodes.has(nodePath);
+      const isMatch = matchingNodes.has(nodePath);
+      const isRoot = !parentPath;
+      const isMainCategory = depth === 1;
+
+      const nodeEl = document.createElement("div");
+      nodeEl.className = `tree-node ${isRoot ? "root" : ""} ${isExpanded ? "expanded" : ""} ${isMatch ? "match" : ""} ${isMainCategory && isMatch ? "match-category" : ""}`;
+      nodeEl.dataset.path = nodePath;
+
+      // Node content
+      const content = document.createElement("div");
+      content.className = "node-content";
+
+      // Toggle indicator for nodes with children
+      if (hasChildren) {
+        const toggle = document.createElement("span");
+        toggle.className = "node-toggle";
+        toggle.textContent = isExpanded ? "−" : "+";
+        content.appendChild(toggle);
+      } else {
+        const bullet = document.createElement("span");
+        bullet.className = "node-bullet";
+        bullet.textContent = "•";
+        content.appendChild(bullet);
+      }
+
+      // Node label
+      const label = document.createElement("span");
+      label.className = "node-label";
+      label.textContent = node.name;
+      content.appendChild(label);
+
+      // Click handler
+      if (hasChildren) {
+        content.style.cursor = "pointer";
+        content.addEventListener("click", () => {
+          if (isExpanded) {
+            expandedNodes.delete(nodePath);
+            collapseDescendants(node, nodePath);
+          } else {
+            expandedNodes.add(nodePath);
+          }
+          renderTree();
+        });
+      }
+
+      nodeEl.appendChild(content);
+
+      // Children container
+      if (hasChildren && isExpanded) {
+        const childrenContainer = document.createElement("div");
+        childrenContainer.className = "node-children";
+        node.children.forEach(child => {
+          childrenContainer.appendChild(createTreeElement(child, nodePath, depth + 1));
+        });
+        nodeEl.appendChild(childrenContainer);
+      }
+
+      return nodeEl;
+    }
+
+    function collapseDescendants(node, nodePath) {
+      if (!node.children) return;
+      node.children.forEach(child => {
+        const childPath = `${nodePath}/${child.name}`;
+        expandedNodes.delete(childPath);
+        collapseDescendants(child, childPath);
+      });
+    }
+
+    // Render heatmap
+    function renderHeatmap() {
+      heatmapContainer.innerHTML = "";
+
+      // Group leaves by category
+      const categories = {};
+      skills.children.forEach(cat => {
+        const leaves = collectLeaves(cat, cat.name);
+        categories[cat.name] = leaves;
+      });
+
+      // Create heatmap grid
+      Object.entries(categories).forEach(([catName, leaves]) => {
+        const catEl = document.createElement("div");
+        catEl.className = "heatmap-category";
+
+        const titleEl = document.createElement("h3");
+        titleEl.className = "heatmap-title";
+        titleEl.textContent = catName;
+        catEl.appendChild(titleEl);
+
+        const gridEl = document.createElement("div");
+        gridEl.className = "heatmap-grid";
+
+        leaves.forEach(leaf => {
+          const cell = document.createElement("div");
+          cell.className = `heatmap-cell level-${leaf.level}`;
+          cell.textContent = leaf.name;
+          cell.title = `${leaf.name} - Level ${leaf.level}/5`;
+          gridEl.appendChild(cell);
+        });
+
+        catEl.appendChild(gridEl);
+        heatmapContainer.appendChild(catEl);
+      });
+
+      // Add legend
+      const legend = document.createElement("div");
+      legend.className = "heatmap-legend";
+      legend.innerHTML = `
+        <span class="legend-label">Expertise:</span>
+        <span class="legend-item level-1">1</span>
+        <span class="legend-item level-2">2</span>
+        <span class="legend-item level-3">3</span>
+        <span class="legend-item level-4">4</span>
+        <span class="legend-item level-5">5</span>
+      `;
+      heatmapContainer.appendChild(legend);
+    }
+
+    // Toggle heatmap view
+    function toggleHeatmap() {
+      isHeatmapView = !isHeatmapView;
+      if (isHeatmapView) {
+        treeContainer.style.display = "none";
+        heatmapContainer.style.display = "block";
+        heatmapBtn.classList.add("active");
+        renderHeatmap();
+      } else {
+        treeContainer.style.display = "block";
+        heatmapContainer.style.display = "none";
+        heatmapBtn.classList.remove("active");
+      }
+    }
+
+    // Expand all
+    function expandAll() {
+      function addAll(node, parentPath) {
+        const nodePath = parentPath ? `${parentPath}/${node.name}` : node.name;
+        if (node.children && node.children.length > 0) {
+          expandedNodes.add(nodePath);
+          node.children.forEach(child => addAll(child, nodePath));
+        }
+      }
+      addAll(skills, "");
+      matchingNodes.clear();
+      renderTree();
+    }
+
+    // Collapse all (except root)
+    function collapseAll() {
+      expandedNodes.clear();
+      expandedNodes.add(skills.name);
+      matchingNodes.clear();
+      renderTree();
+    }
+
+    // Search with minimum expansion
+    function search(term) {
+      const searchTerm = term.toLowerCase().trim();
+      matchingNodes.clear();
+
+      if (!searchTerm) {
+        collapseAll();
+        return;
+      }
+
+      const pathsToExpand = new Set();
+
+      function dfs(node, parentPath) {
+        const nodePath = parentPath ? `${parentPath}/${node.name}` : node.name;
+
+        if (node.name.toLowerCase().includes(searchTerm)) {
+          matchingNodes.add(nodePath);
+          let current = nodePath;
+          while (current) {
+            pathsToExpand.add(current);
+            current = parentMap.get(current);
+          }
+        }
+
+        if (node.children) {
+          node.children.forEach(child => dfs(child, nodePath));
+        }
+      }
+
+      dfs(skills, "");
+
+      expandedNodes.clear();
+      pathsToExpand.forEach(path => expandedNodes.add(path));
+
+      renderTree();
+    }
+
+    // Bind controls
+    const expandBtn = document.getElementById("expand-all-btn");
+    const collapseBtn = document.getElementById("collapse-all-btn");
+    const searchInput = document.getElementById("skills-search");
+    const clearBtn = document.getElementById("clear-search-btn");
+
+    if (expandBtn) {
+      expandBtn.addEventListener("click", () => {
+        if (searchInput) searchInput.value = "";
+        if (isHeatmapView) toggleHeatmap();
+        expandAll();
+      });
+    }
+
+    if (collapseBtn) {
+      collapseBtn.addEventListener("click", () => {
+        if (searchInput) searchInput.value = "";
+        if (isHeatmapView) toggleHeatmap();
+        collapseAll();
+      });
+    }
+
+    if (heatmapBtn) {
+      heatmapBtn.addEventListener("click", toggleHeatmap);
+    }
+
+    if (searchInput) {
+      let timeout;
+      searchInput.addEventListener("input", (e) => {
+        clearTimeout(timeout);
+        if (isHeatmapView) toggleHeatmap();
+        timeout = setTimeout(() => search(e.target.value), 200);
+      });
+    }
+
+    if (clearBtn) {
+      clearBtn.addEventListener("click", () => {
+        if (searchInput) searchInput.value = "";
+        if (isHeatmapView) toggleHeatmap();
+        collapseAll();
+      });
+    }
+
+    // Initial render
+    renderTree();
+  }
+
+  // Initialize
+  initTree();
+
+  // Handle Astro view transitions
+  document.addEventListener("astro:page-load", () => {
+    const container = document.getElementById("skills-tree");
+    if (container && !container.hasChildNodes()) {
+      initTree();
+    }
+  });
+</script>
+
+<style>
+  .skills-tree-wrapper {
+    width: 100%;
+  }
+
+  .skills-tree-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .tree-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 0.5rem;
+    background: var(--muted);
+    border: 1px solid var(--border);
+    color: var(--foreground);
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .tree-btn:hover {
+    background: var(--border);
+    color: var(--accent);
+  }
+
+  .tree-btn.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+
+  .search-container {
+    position: relative;
+    flex: 1;
+    max-width: 250px;
+  }
+
+  .tree-search {
+    width: 100%;
+    height: 36px;
+    padding: 0 2rem 0 0.75rem;
+    border-radius: 0.5rem;
+    background: var(--muted);
+    border: 1px solid var(--border);
+    color: var(--foreground);
+    font-size: 0.875rem;
+    outline: none;
+    transition: border-color 0.2s ease;
+  }
+
+  .tree-search::placeholder {
+    color: var(--foreground);
+    opacity: 0.5;
+  }
+
+  .tree-search:focus {
+    border-color: var(--accent);
+  }
+
+  .clear-btn {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    color: var(--foreground);
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+    cursor: pointer;
+  }
+
+  .clear-btn:hover {
+    opacity: 1;
+  }
+
+  /* Tree styles */
+  .skills-tree {
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  :global(.tree-node) {
+    position: relative;
+  }
+
+  :global(.tree-node.root > .node-content) {
+    display: none;
+  }
+
+  :global(.node-content) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0.5rem;
+    border-radius: 0.375rem;
+    transition: background-color 0.15s ease;
+  }
+
+  :global(.node-content:hover) {
+    background-color: var(--muted);
+  }
+
+  :global(.node-toggle) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--muted);
+    border-radius: 0.25rem;
+    flex-shrink: 0;
+  }
+
+  :global(.node-bullet) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    font-size: 0.6rem;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  :global(.node-label) {
+    color: var(--foreground);
+  }
+
+  /* Search match highlight - using border instead of background for visibility */
+  :global(.tree-node.match > .node-content) {
+    background-color: var(--accent);
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  :global(.tree-node.match > .node-content .node-label) {
+    color: white;
+    font-weight: 600;
+  }
+
+  :global(.tree-node.match > .node-content .node-toggle),
+  :global(.tree-node.match > .node-content .node-bullet) {
+    color: white;
+    background: transparent;
+  }
+
+  /* Special styling for matched main category - use inverted style */
+  :global(.tree-node.match-category > .node-content) {
+    background-color: var(--foreground) !important;
+    border: 2px solid var(--accent);
+  }
+
+  :global(.tree-node.match-category > .node-content .node-label) {
+    color: var(--background) !important;
+  }
+
+  :global(.tree-node.match-category > .node-content .node-toggle) {
+    color: var(--background) !important;
+    background: transparent;
+  }
+
+  :global(.node-children) {
+    margin-left: 0.75rem;
+    padding-left: 1rem;
+    border-left: 2px solid var(--border);
+  }
+
+  /* Root level: grid of cards */
+  :global(.tree-node.root > .node-children) {
+    margin-left: 0;
+    padding-left: 0;
+    border-left: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+  }
+
+  /* Main category cards */
+  :global(.tree-node.root > .node-children > .tree-node) {
+    background: var(--muted);
+    padding: 1.25rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--border);
+  }
+
+  :global(.tree-node.root > .node-children > .tree-node > .node-content) {
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+    padding: 0;
+  }
+
+  :global(.tree-node.root > .node-children > .tree-node > .node-content:hover) {
+    background: transparent;
+  }
+
+  :global(.tree-node.root > .node-children > .tree-node > .node-content .node-label) {
+    color: var(--accent);
+  }
+
+  :global(.tree-node.root > .node-children > .tree-node > .node-content .node-toggle) {
+    background: var(--border);
+  }
+
+  :global(.tree-node.root > .node-children > .tree-node > .node-children) {
+    margin-left: 0;
+    padding-left: 1rem;
+    border-left: 2px solid var(--border);
+  }
+
+  /* Heatmap styles */
+  .skills-heatmap {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  :global(.heatmap-category) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  :global(.heatmap-title) {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin: 0;
+  }
+
+  :global(.heatmap-grid) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  :global(.heatmap-cell) {
+    padding: 0.4rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: transform 0.15s ease;
+    cursor: default;
+  }
+
+  :global(.heatmap-cell:hover) {
+    transform: scale(1.05);
+  }
+
+  /* Level colors - using opacity variations of accent */
+  :global(.heatmap-cell.level-1) {
+    background: color-mix(in srgb, var(--accent) 15%, var(--muted));
+    color: var(--foreground);
+  }
+
+  :global(.heatmap-cell.level-2) {
+    background: color-mix(in srgb, var(--accent) 30%, var(--muted));
+    color: var(--foreground);
+  }
+
+  :global(.heatmap-cell.level-3) {
+    background: color-mix(in srgb, var(--accent) 50%, var(--muted));
+    color: var(--foreground);
+  }
+
+  :global(.heatmap-cell.level-4) {
+    background: color-mix(in srgb, var(--accent) 75%, var(--muted));
+    color: white;
+  }
+
+  :global(.heatmap-cell.level-5) {
+    background: var(--accent);
+    color: white;
+  }
+
+  :global(.heatmap-legend) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  :global(.legend-label) {
+    font-size: 0.85rem;
+    color: var(--foreground);
+    opacity: 0.7;
+    margin-right: 0.5rem;
+  }
+
+  :global(.legend-item) {
+    width: 1.75rem;
+    height: 1.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  :global(.legend-item.level-1) {
+    background: color-mix(in srgb, var(--accent) 15%, var(--muted));
+    color: var(--foreground);
+  }
+
+  :global(.legend-item.level-2) {
+    background: color-mix(in srgb, var(--accent) 30%, var(--muted));
+    color: var(--foreground);
+  }
+
+  :global(.legend-item.level-3) {
+    background: color-mix(in srgb, var(--accent) 50%, var(--muted));
+    color: var(--foreground);
+  }
+
+  :global(.legend-item.level-4) {
+    background: color-mix(in srgb, var(--accent) 75%, var(--muted));
+    color: white;
+  }
+
+  :global(.legend-item.level-5) {
+    background: var(--accent);
+    color: white;
+  }
+
+  @media (max-width: 640px) {
+    .skills-tree-controls {
+      flex-wrap: wrap;
+    }
+
+    .search-container {
+      order: -1;
+      width: 100%;
+      max-width: none;
+      margin-bottom: 0.5rem;
+    }
+
+    :global(.tree-node.root > .node-children) {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

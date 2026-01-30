@@ -1,0 +1,32 @@
+# Build output
+dist/
+
+# Astro cache
+.astro/
+
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Claude Code
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Reference templates (not deployed)
+_reference/
+
+# Pagefind (regenerated on build)
+public/pagefind/

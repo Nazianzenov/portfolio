@@ -1,0 +1,126 @@
+---
+export interface Diploma {
+  name: string;
+  institution: string;
+  year?: string;
+  url?: string;
+  description?: string;
+}
+
+interface Props {
+  diplomas: Diploma[];
+}
+
+const { diplomas } = Astro.props;
+---
+
+<div class="education-list">
+  {diplomas.map(diploma => (
+    <div class="education-item">
+      <div class="education-header">
+        <h3 class="education-degree">{diploma.name}</h3>
+        {diploma.year && <span class="education-year">{diploma.year}</span>}
+      </div>
+      {diploma.url ? (
+        <a
+          href={diploma.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="education-institution"
+        >
+          {diploma.institution}
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="external-icon">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+            <polyline points="15 3 21 3 21 9" />
+            <line x1="10" y1="14" x2="21" y2="3" />
+          </svg>
+        </a>
+      ) : (
+        <span class="education-institution">{diploma.institution}</span>
+      )}
+      {diploma.description && (
+        <p class="education-description">{diploma.description}</p>
+      )}
+    </div>
+  ))}
+</div>
+
+<style>
+  .education-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .education-item {
+    padding: 1.25rem 1.5rem;
+    background: var(--muted);
+    border-radius: 0.75rem;
+    border-left: 3px solid var(--accent);
+  }
+
+  .education-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .education-degree {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--foreground);
+    margin: 0;
+  }
+
+  .education-year {
+    font-size: 0.85rem;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .education-institution {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.95rem;
+    color: var(--foreground);
+    opacity: 0.8;
+    text-decoration: none;
+    transition: opacity 0.2s ease, color 0.2s ease;
+  }
+
+  a.education-institution:hover {
+    opacity: 1;
+    color: var(--accent);
+  }
+
+  .external-icon {
+    opacity: 0.6;
+  }
+
+  a.education-institution:hover .external-icon {
+    opacity: 1;
+  }
+
+  .education-description {
+    margin: 0.75rem 0 0;
+    font-size: 0.9rem;
+    color: var(--foreground);
+    opacity: 0.7;
+    line-height: 1.5;
+  }
+
+  @media (max-width: 640px) {
+    .education-header {
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .education-year {
+      order: -1;
+    }
+  }
+</style>

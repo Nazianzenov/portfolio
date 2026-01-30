@@ -1,0 +1,182 @@
+---
+export interface TimelineItem {
+  title: string;
+  company: string;
+  location?: string;
+  startDate: string;
+  endDate?: string;
+  description?: string;
+  tags?: string[];
+}
+
+interface Props {
+  items: TimelineItem[];
+}
+
+const { items } = Astro.props;
+---
+
+<div class="timeline-container">
+  <div class="timeline-line"></div>
+
+  {items.map((item, index) => (
+    <div class="timeline-item" style={`--delay: ${index * 0.1}s`}>
+      <div class="timeline-dot"></div>
+      <div class="timeline-content">
+        <div class="timeline-header">
+          <h3 class="timeline-title">{item.title}</h3>
+          <span class="timeline-date">
+            {item.startDate} — {item.endDate || "Present"}
+          </span>
+        </div>
+        <p class="timeline-company">
+          {item.company}
+          {item.location && <span class="timeline-location"> · {item.location}</span>}
+        </p>
+        {item.description && (
+          <p class="timeline-description">{item.description}</p>
+        )}
+        {item.tags && item.tags.length > 0 && (
+          <div class="timeline-tags">
+            {item.tags.map(tag => (
+              <span class="timeline-tag">{tag}</span>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  ))}
+</div>
+
+<style>
+  .timeline-container {
+    position: relative;
+    padding-left: 2rem;
+  }
+
+  .timeline-line {
+    position: absolute;
+    left: 0.5rem;
+    top: 0.5rem;
+    bottom: 0.5rem;
+    width: 2px;
+    background: linear-gradient(
+      to bottom,
+      var(--accent) 0%,
+      var(--accent) 50%,
+      var(--border) 100%
+    );
+  }
+
+  .timeline-item {
+    position: relative;
+    padding-bottom: 2rem;
+    animation: fadeInUp 0.5s ease-out forwards;
+    animation-delay: var(--delay);
+    opacity: 0;
+  }
+
+  .timeline-item:last-child {
+    padding-bottom: 0;
+  }
+
+  .timeline-dot {
+    position: absolute;
+    left: -1.75rem;
+    top: 0.35rem;
+    width: 0.75rem;
+    height: 0.75rem;
+    background: var(--accent);
+    border-radius: 50%;
+    border: 2px solid var(--background);
+    box-shadow: 0 0 0 3px var(--accent);
+  }
+
+  .timeline-content {
+    background: var(--muted);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .timeline-content:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .timeline-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .timeline-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--foreground);
+    margin: 0;
+  }
+
+  .timeline-date {
+    font-size: 0.85rem;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .timeline-company {
+    font-size: 0.95rem;
+    color: var(--foreground);
+    opacity: 0.8;
+    margin: 0.25rem 0;
+  }
+
+  .timeline-location {
+    opacity: 0.6;
+  }
+
+  .timeline-description {
+    font-size: 0.9rem;
+    color: var(--foreground);
+    opacity: 0.7;
+    margin: 0.75rem 0 0;
+    line-height: 1.5;
+  }
+
+  .timeline-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+
+  .timeline-tag {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.6rem;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    color: var(--foreground);
+    opacity: 0.8;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .timeline-header {
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+  }
+</style>

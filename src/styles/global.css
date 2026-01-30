@@ -1,0 +1,78 @@
+@import "tailwindcss";
+@import "./typography.css";
+
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+:root,
+html[data-theme="light"] {
+  /* Light Mode - Frosted Blue & Sunflower Gold */
+  --background: #fafcfe;
+  --foreground: #001524; /* Ink Black - high contrast */
+  --accent: #b38600; /* Darkened Sunflower Gold - WCAG AA compliant */
+  --accent-hover: #946f00;
+  --muted: #e6f5fa; /* Lightest Frosted Blue */
+  --border: #b8e2f0; /* Mid Frosted Blue */
+  --accent-subtle: #fcbf5d; /* Original Sunflower Gold for decorative use */
+}
+
+html[data-theme="dark"] {
+  /* Dark Mode - Ink Black & Harvest Orange */
+  --background: #001524; /* Ink Black */
+  --foreground: #f0f5fa; /* Soft white - easier reading */
+  --accent: #fd8021; /* Harvest Orange - vibrant */
+  --accent-hover: #ffd373; /* Jasmine - hover state */
+  --muted: #001d59; /* Deep Navy */
+  --border: #003488; /* Egyptian Blue */
+  --accent-subtle: #e05400; /* Cayenne Red for secondary accents */
+}
+
+@theme inline {
+  --font-app: var(--font-google-sans-code);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-accent/75;
+    scrollbar-width: auto;
+    scrollbar-color: var(--color-muted) transparent;
+  }
+  html {
+    @apply overflow-y-scroll scroll-smooth;
+  }
+  body {
+    @apply flex min-h-svh flex-col bg-background font-app text-foreground selection:bg-accent/75 selection:text-background;
+  }
+  a,
+  button {
+    @apply outline-offset-1 outline-accent focus-visible:no-underline focus-visible:outline-2 focus-visible:outline-dashed;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@utility max-w-app {
+  @apply max-w-3xl;
+}
+
+@utility app-layout {
+  @apply mx-auto w-full max-w-app px-4;
+}
+
+.active-nav {
+  @apply underline decoration-wavy decoration-2 underline-offset-8;
+}
+
+/* Source: https://piccalil.li/blog/a-more-modern-css-reset/ */
+/* Anything that has been anchored to should have extra scroll margin */
+:target {
+  scroll-margin-block: 1rem;
+}

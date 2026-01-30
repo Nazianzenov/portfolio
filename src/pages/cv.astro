@@ -1,0 +1,319 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import Timeline, { type TimelineItem } from "@/components/cv/Timeline.astro";
+import Education, { type Diploma } from "@/components/cv/Education.astro";
+import SkillsGraph, { type SkillNode } from "@/components/cv/SkillsGraph.astro";
+import Projects, { type Project } from "@/components/cv/Projects.astro";
+
+// ============================================
+// DATA
+// ============================================
+
+// Work Experience
+const workExperience: TimelineItem[] = [
+  {
+    title: "Cybersecurity Graduate",
+    company: "EFG Bank",
+    location: "Geneva, Switzerland",
+    startDate: "Sept 2024",
+    endDate: "Present",
+    description: "Architected enterprise CTI infrastructure from scratch. Deployed OpenCTI with 15+ automated feeds, authored threat intelligence procedures, and lead intelligence sharing with government CERTs across 5 countries. Developed 20+ detection use cases for MDE and ELK SIEM.",
+    tags: ["CTI", "OpenCTI", "SIEM", "Incident Response"],
+  },
+  {
+    title: "Blockchain Security Intern",
+    company: "Secutix",
+    location: "Lausanne, Switzerland",
+    startDate: "Feb 2024",
+    endDate: "Aug 2024",
+    description: "Developed blockchain-based self-sovereign identity system for bot protection, integrating Ethereum Layer-2 technology for fraud prevention. Master's thesis project.",
+    tags: ["Blockchain", "Ethereum", "Web3", "Security"],
+  },
+  {
+    title: "CTI Research Intern",
+    company: "RHEA Group",
+    location: "Leiden, Netherlands",
+    startDate: "Jul 2023",
+    endDate: "Sept 2023",
+    description: "Developed theoretical framework for prioritizing Cyber Threat Intelligence for European Space Agency missions. Implemented proof-of-concept using OpenCTI and Python.",
+    tags: ["CTI", "Space Security", "OpenCTI", "Research"],
+  },
+  {
+    title: "Student Assistant",
+    company: "EPFL - DEDIS Lab",
+    location: "Lausanne, Switzerland",
+    startDate: "Jul 2023",
+    endDate: "Feb 2024",
+    description: "Decentralized Systems Engineering - Contributing to distributed systems research and development.",
+    tags: ["Golang", "Distributed Systems", "Research"],
+  },
+];
+
+// Education
+const diplomas: Diploma[] = [
+  {
+    name: "MSc Cybersecurity",
+    institution: "EPFL & ETH Zurich (Joint Degree)",
+    year: "2022-2024",
+    url: "https://www.epfl.ch/education/master/programs/cyber-security/",
+    description: "Specialized in threat intelligence, applied cryptography, and security engineering.",
+  },
+  {
+    name: "BSc Communication Systems",
+    institution: "EPFL",
+    year: "2019-2022",
+    url: "https://www.epfl.ch/",
+    description: "Foundation in computer science, networking, and signal processing.",
+  },
+  {
+    name: "Exchange Semester",
+    institution: "Aalto University, Finland",
+    year: "2021-2022",
+    url: "https://www.aalto.fi/",
+    description: "Focus on machine learning and data science.",
+  },
+];
+
+// Skills - Tree structure with expertise levels (1-5)
+const skills: SkillNode = {
+  name: "Skills",
+  children: [
+    {
+      name: "Cyber Threat Intelligence",
+      children: [
+        { name: "Threat Actor Profiling", level: 4 },
+        { name: "IOC Analysis", level: 5 },
+        { name: "MITRE ATT&CK", level: 5 },
+        { name: "STIX/TAXII", level: 5 },
+        {
+          name: "Platforms",
+          children: [
+            { name: "OpenCTI", level: 5 },
+            { name: "MISP", level: 4 },
+          ],
+        },
+        { name: "Intelligence Sharing", level: 5 },
+        { name: "Threat Hunting", level: 4 },
+      ],
+    },
+    {
+      name: "OSINT",
+      children: [
+        {
+          name: "GEO OSINT",
+          children: [
+            { name: "Geolocation", level: 4 },
+            { name: "Imagery Analysis", level: 3 },
+          ],
+        },
+        {
+          name: "SOCMINT",
+          children: [
+            { name: "Chinese Platforms", level: 5 },
+            { name: "Telegram", level: 4 },
+          ],
+        },
+        { name: "Domain Pivoting", level: 4 },
+        { name: "Dark Web", level: 4 },
+        { name: "Passive DNS", level: 4 },
+      ],
+    },
+    {
+      name: "Security Operations",
+      children: [
+        {
+          name: "SIEM",
+          children: [
+            { name: "Microsoft Sentinel", level: 4 },
+            { name: "ELK Stack", level: 4 },
+          ],
+        },
+        {
+          name: "EDR/XDR",
+          children: [
+            { name: "Microsoft Defender", level: 5 },
+            { name: "Vectra AI", level: 4 },
+          ],
+        },
+        { name: "Incident Response", level: 4 },
+        { name: "Detection Engineering", level: 5 },
+        { name: "KQL", level: 5 },
+      ],
+    },
+    {
+      name: "Development",
+      children: [
+        {
+          name: "Languages",
+          children: [
+            { name: "Python", level: 5 },
+            { name: "Golang", level: 4 },
+            { name: "JavaScript", level: 3 },
+            { name: "Java", level: 3 },
+            { name: "C", level: 3 },
+            { name: "SQL", level: 4 },
+          ],
+        },
+        {
+          name: "Infrastructure",
+          children: [
+            { name: "Docker", level: 4 },
+            { name: "Git", level: 5 },
+            { name: "Ansible", level: 3 },
+            { name: "Neo4j", level: 3 },
+          ],
+        },
+        {
+          name: "Frameworks",
+          children: [
+            { name: "Flask", level: 4 },
+            { name: "Gin", level: 3 },
+          ],
+        },
+      ],
+    },
+    {
+      name: "Security Analysis",
+      children: [
+        { name: "Wireshark", level: 4 },
+        { name: "Burp Suite", level: 3 },
+        { name: "Ghidra", level: 2 },
+        { name: "Email Forensics", level: 4 },
+        { name: "Network Analysis", level: 4 },
+      ],
+    },
+    {
+      name: "Cryptography & Privacy",
+      children: [
+        { name: "Applied Cryptography", level: 4 },
+        { name: "Privacy Engineering", level: 4 },
+        { name: "Blockchain Security", level: 4 },
+      ],
+    },
+  ],
+};
+
+// Projects
+const projects: Project[] = [
+  {
+    name: "Enterprise CTI Platform",
+    description: "Built complete CTI infrastructure for a private bank: OpenCTI deployment with 15+ automated feeds, IOC dissemination to XDR/SIEM, and intelligence sharing framework with government CERTs.",
+    tags: ["OpenCTI", "Python", "Automation", "STIX/TAXII"],
+    visibility: "private",
+  },
+  {
+    name: "Space Sector CTI Framework",
+    description: "Theoretical framework for prioritizing Cyber Threat Intelligence in space missions, developed for the European Space Agency during research internship.",
+    tags: ["CTI", "Research", "Space Security"],
+    visibility: "private",
+  },
+  {
+    name: "OSINT Toolkit",
+    description: "Collection of Python scripts and tools for open-source intelligence gathering, including domain reconnaissance, social media analysis, and automated reporting.",
+    tags: ["Python", "OSINT", "Automation"],
+    visibility: "public",
+    projectTag: "osint-toolkit",
+  },
+];
+---
+
+<Layout title="CV - Victor Le Jamtel">
+  <Header />
+  <main id="main-content" class="app-layout cv-page">
+    <!-- Hero Section -->
+    <section class="cv-hero">
+      <h1 class="cv-name">Victor Le Jamtel</h1>
+      <p class="cv-title">CTI & OSINT | Cybersecurity Engineer</p>
+    </section>
+
+    <!-- Work Experience -->
+    <section class="cv-section">
+      <h2 class="section-title">Work Experience</h2>
+      <Timeline items={workExperience} />
+    </section>
+
+    <!-- Education -->
+    <section class="cv-section">
+      <h2 class="section-title">Education</h2>
+      <Education diplomas={diplomas} />
+    </section>
+
+    <!-- Skills -->
+    <section class="cv-section">
+      <h2 class="section-title">Skills</h2>
+      <SkillsGraph skills={skills} />
+    </section>
+
+    <!-- Projects -->
+    <section class="cv-section">
+      <h2 class="section-title">Projects</h2>
+      <Projects projects={projects} />
+    </section>
+  </main>
+  <Footer />
+</Layout>
+
+<style>
+  .cv-page {
+    padding-top: 2rem;
+    padding-bottom: 4rem;
+  }
+
+  .cv-hero {
+    text-align: center;
+    padding: 3rem 0 4rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 3rem;
+  }
+
+  .cv-name {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--foreground);
+  }
+
+  .cv-title {
+    font-size: 1.25rem;
+    color: var(--accent);
+    margin: 0.75rem 0 0;
+    font-weight: 500;
+  }
+
+  .cv-section {
+    margin-bottom: 3.5rem;
+  }
+
+  .cv-section:last-child {
+    margin-bottom: 0;
+  }
+
+  .section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--accent);
+    display: inline-block;
+  }
+
+  @media (max-width: 640px) {
+    .cv-hero {
+      padding: 2rem 0 3rem;
+    }
+
+    .cv-name {
+      font-size: 2rem;
+    }
+
+    .cv-title {
+      font-size: 1.1rem;
+    }
+
+    .section-title {
+      font-size: 1.25rem;
+    }
+  }
+</style>
