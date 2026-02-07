@@ -29,12 +29,6 @@ export const SOCIALS: Social[] = [
     linkTitle: `${SITE.title} on GitHub`,
     icon: IconGitHub,
   },
-  {
-    name: "Mail",
-    href: "mailto:victor@lejamtel.ch",
-    linkTitle: `Send an email to ${SITE.title}`,
-    icon: IconMail,
-  },
 ] as const;
 
 export const SHARE_LINKS: Social[] = [

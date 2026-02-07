@@ -28,5 +28,8 @@ Thumbs.db
 # Reference templates (not deployed)
 _reference/
 
+# Local blog editor
+_editor/
+
 # Pagefind (regenerated on build)
 public/pagefind/
