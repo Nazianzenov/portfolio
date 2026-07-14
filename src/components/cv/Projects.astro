@@ -4,10 +4,12 @@ export interface Project {
   description: string;
   tags?: string[];
   image?: string;
-  /** "private" = non-clickable, "public" = links to blog tag */
+  /** "private" = non-clickable, "public" = links to blog tag or external repo */
   visibility: "private" | "public";
   /** For public projects: the blog tag to link to */
   projectTag?: string;
+  /** For public projects: an external link (e.g. GitHub repo) */
+  url?: string;
 }
 
 interface Props {
@@ -17,9 +19,9 @@ interface Props {
 const { projects } = Astro.props;
 
 function getProjectUrl(project: Project): string | null {
-  if (project.visibility === "public" && project.projectTag) {
-    return `/tags/${project.projectTag.toLowerCase()}/`;
-  }
+  if (project.visibility !== "public") return null;
+  if (project.url) return project.url;
+  if (project.projectTag) return `/tags/${project.projectTag.toLowerCase()}/`;
   return null;
 }
 ---
@@ -28,11 +30,14 @@ function getProjectUrl(project: Project): string | null {
   {projects.map(project => {
     const projectUrl = getProjectUrl(project);
     const isClickable = projectUrl !== null;
+    const isExternal = Boolean(project.url);
     const CardWrapper = isClickable ? "a" : "div";
 
     return (
       <CardWrapper
         href={isClickable ? projectUrl : undefined}
+        target={isExternal ? "_blank" : undefined}
+        rel={isExternal ? "noopener noreferrer" : undefined}
         class={`project-card ${isClickable ? "project-card-clickable" : "project-card-private"}`}
       >
         {project.image ? (
@@ -85,7 +90,7 @@ function getProjectUrl(project: Project): string | null {
           {isClickable && (
             <div class="project-cta">
               <span class="cta-text">
-                View articles
+                {isExternal ? "View on GitHub" : "View articles"}
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <line x1="5" y1="12" x2="19" y2="12" />
                   <polyline points="12 5 19 12 12 19" />

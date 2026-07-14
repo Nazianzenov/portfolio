@@ -14,11 +14,20 @@ import Projects, { type Project } from "@/components/cv/Projects.astro";
 // Work Experience
 const workExperience: TimelineItem[] = [
   {
-    title: "Cybersecurity Graduate",
+    title: "CTI Analyst",
+    company: "EFG Bank",
+    location: "Geneva, Switzerland",
+    startDate: "March 2026",
+    endDate: "Present",
+    description: "Lead cyber threat intelligence operations: manage the OpenCTI platform and automated feeds, produce actionable intelligence, and drive intelligence sharing with government CERTs. Develop and tune detection use cases across MDE and ELK SIEM.",
+    tags: ["CTI", "OpenCTI", "SIEM", "Threat Intelligence"],
+  },
+  {
+    title: "Graduate - Threat Intelligence",
     company: "EFG Bank",
     location: "Geneva, Switzerland",
     startDate: "Sept 2024",
-    endDate: "Present",
+    endDate: "March 2026",
     description: "Architected enterprise CTI infrastructure from scratch. Deployed OpenCTI with 15+ automated feeds, authored threat intelligence procedures, and lead intelligence sharing with government CERTs across 5 countries. Developed 20+ detection use cases for MDE and ELK SIEM.",
     tags: ["CTI", "OpenCTI", "SIEM", "Incident Response"],
   },
@@ -73,6 +82,17 @@ const diplomas: Diploma[] = [
     year: "2021-2022",
     url: "https://www.aalto.fi/",
     description: "Focus on machine learning and data science.",
+  },
+];
+
+// Certifications
+const certifications: Diploma[] = [
+  {
+    name: "GSOA — GIAC Strategic OSINT Analyst",
+    institution: "GIAC (Global Information Assurance Certification)",
+    year: "2026",
+    url: "https://www.giac.org/certifications/strategic-osint-analyst-gsoa",
+    description: "Hands-on certification validating advanced open-source intelligence tradecraft. Earned July 2026.",
   },
 ];
 
@@ -198,6 +218,13 @@ const skills: SkillNode = {
 // Projects
 const projects: Project[] = [
   {
+    name: "GEOSINT Workbench",
+    description: "A local, expert-grade geographical OSINT workstation: interactive map with chronolocation (sun/shadow solver), historical weather, image intelligence (EXIF), a launcher for ~35 professional tools, and a fully sourced field wiki. Everything runs on your machine.",
+    tags: ["OSINT", "Python", "JavaScript", "Leaflet", "Geolocation"],
+    visibility: "public",
+    url: "https://github.com/Nazianzenov/GEOSINT",
+  },
+  {
     name: "Enterprise CTI Platform",
     description: "Built complete CTI infrastructure for a private bank: OpenCTI deployment with 15+ automated feeds, IOC dissemination to XDR/SIEM, and intelligence sharing framework with government CERTs.",
     tags: ["OpenCTI", "Python", "Automation", "STIX/TAXII"],
@@ -231,6 +258,12 @@ const projects: Project[] = [
     <section class="cv-section">
       <h2 class="section-title">Education</h2>
       <Education diplomas={diplomas} />
+    </section>
+
+    <!-- Certifications -->
+    <section class="cv-section">
+      <h2 class="section-title">Certifications</h2>
+      <Education diplomas={certifications} />
     </section>
 
     <!-- Skills -->
